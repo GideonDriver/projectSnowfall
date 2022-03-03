@@ -548,7 +548,7 @@ public class CustomerMenu {
 						break;
 
 					case 3:
-						if (accounts.size() < 10) {
+						if (accounts.size() == 1) {
 							System.out.println();
 							System.err.println("Must retain (1) account");
 							break;
