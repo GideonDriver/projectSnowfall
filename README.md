@@ -5,4 +5,4 @@ This is a simple, console-based banking application that I (Gideon Driver) have 
 <hr/>
 Coding language: Java
 
-Technologies used: Maven, JUnit, Postgres
+Maven Repositories used: JUnit, Postgres
