@@ -1,0 +1,114 @@
+----------Initialize Tables----------
+
+drop table if EXISTS snowfallAccounts;
+drop table if EXISTS snowfallTransfers;
+drop table if EXISTS snowfallEvents;
+drop table if EXISTS snowfallLogin;
+drop sequence if EXISTS userId_sequence;
+	
+create sequence userId_sequence	start 10000000 increment 1;
+
+create table snowfallLogin (
+userId integer default nextval('userId_sequence') primary key,
+username varchar(20) not null unique,
+password varchar(20) not null,
+accountType varchar(16) not null,
+status varchar(16) default 'Pending'
+);
+
+insert into snowfallLogin values (90000000, 'Admin' ,'adminpassword', 'Employee', 'Active');
+
+create table snowfallAccounts (
+accountId integer default nextval('accountId_sequence') primary key,
+userId integer not null,
+accountBalance NUMERIC(15) not null,
+status varchar(16) default 'Active',
+constraint userIdToAccount foreign key (userId) references snowfallLogin(userId) on delete cascade
+);
+
+create table snowfallTransfers (
+transferId serial not null primary key,
+senderId integer not null,
+recipientId integer not null,
+amount NUMERIC(15) not null,
+status varchar(16) default 'Pending',
+constraint senderIdToAccount foreign key (senderId) references snowfallLogin(userId) on delete cascade,
+constraint recipientIdToAccount foreign key (recipientId) references snowfallLogin(userId) on delete cascade
+);
+
+create table snowfallEvents (
+logEventsId serial not null primary key,
+actingUser varchar(20) not null,
+actionDescription varchar(16) not null,
+amount NUMERIC(15) not null,
+fromAccount integer not null,
+controlledBy varchar(20) null,
+transferedTo varchar(20) null,
+timeOfTransaction timestamp without time zone NOT NULL DEFAULT (current_timestamp AT TIME ZONE 'EST')
+);
+
+
+
+
+
+----------Initialize Demo Accounts----------
+
+call snowfallDemoAccountsSetup;
+
+create or replace procedure snowfallDemoAccountsSetup()
+language  plpgsql
+as $$
+begin 
+	
+insert into snowfallLogin values 
+(default, 'Edwin' ,'123456789', 'Customer', 'Active'),
+(default, 'Brenda' ,'wasdwasd', 'Customer', 'Active'),
+(default, 'Darren' ,'linustechtips', 'Customer', 'Active'),
+(default, 'Clayton' ,'password', 'Customer', 'Pending'),
+(default, 'Lisa' ,'hollowknight', 'Customer', 'Denied'),
+(default, 'Abby' ,'password1', 'Customer', 'Deactivated'),
+(90001001, 'Seth' ,'qwertyqwerty', 'Employee', 'Active'),
+(90001002, 'Caleb' ,'123password', 'Employee', 'Pending'),
+(90001003, 'Jessie' ,'1welcome', 'Employee', 'Denied'),
+(90001004, 'Amber' ,'shoutofdragon', 'Employee', 'Deactivated');
+
+insert into snowfallAccounts values 
+(default, 10000001, 8620, 'Active'),
+(default, 10000001, 643521, 'Active'),
+(default, 10000001, 0, 'Frozen'),
+(default, 10000001, 14200, 'Frozen'),
+(default, 10000002, 3158, 'Frozen'),
+(default, 10000002, 384, 'Active'),
+(default, 10000003, 951, 'Frozen'),
+(default, 10000003, 64180, 'Active');
+
+insert into snowfallTransfers values 
+(default, 10000001, 10000002, 4810, default),
+(default, 10000001, 10000002, 84100, 'Accepted'),
+(default, 10000002, 10000001, 69654, default),
+(default, 10000002, 10000001, 154, 'Accepted'),
+(default, 10000003, 10000001, 81323, default),
+(default, 10000003, 10000002, 59123, default);
+
+insert into snowfallEvents values 
+(default, 'Edwin', 'Deposited', 643521, 100000000, null, null, default),
+(default, 'Edwin', 'Deposited', 643521, 100000001, null, null, default),
+(default, 'Edwin', 'Deposited', 14200, 100000003, null, null, default),
+(default, 'Brenda', 'Deposited', 3158, 100000004, null, null, default),
+(default, 'Brenda', 'Deposited', 384, 100000005, null, null, default),
+(default, 'Darren', 'Deposited', 951, 100000006, null, null, default),
+(default, 'Darren', 'Deposited', 64180, 100000007, null, null, default),
+(default, 'Edwin', 'Withdrew', 651, 100000001, null, null, default),
+(default, 'Edwin', 'Withdrew', 165, 100000003, null, null, default),
+(default, 'Brenda', 'Withdrew', 482, 100000004, null, null, default),
+(default, 'Brenda', 'Withdrew', 14, 100000005, null, null, default),
+(default, 'Darren', 'Withdrew', 491, 100000006, null, null, default),
+(default, 'Darren', 'Withdrew', 6560, 100000007, null, null, default),
+(default, 'Edwin', 'Transfered', 4810, 100000001, null, null, default),
+(default, 'Brenda', 'Recieved', 4810, 100000004, null, null, default),
+(default, 'Edwin', 'Transfered', 84100, 100000003, null, null, default),
+(default, 'Brenda', 'Transfered', 69654, 100000004, null, null, default),
+(default, 'Brenda', 'Transfered', 154, 100000005, null, null, default),
+(default, 'Edwin', 'Recieved', 154, 100000001, null, null, default),
+(default, 'Darren', 'Transfered', 81323, 100000006, null, null, default),
+(default, 'Darren', 'Transfered', 59123, 100000007, null, null, default);
